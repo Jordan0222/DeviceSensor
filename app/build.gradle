@@ -85,3 +85,35 @@ dependencies {
     implementation "androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03"
     kapt "androidx.hilt:hilt-compiler:1.0.0"
 }
+
+task helloWord() {
+    10.times { i ->
+        tasks.register("task$i") {
+            doLast {
+                println "Hello from task $i"
+            }
+        }
+    }
+    tasks.named("task1") {
+        dependsOn "task4", "task6", "task8"
+    }
+    dependsOn "task1"
+}
+
+task copyApk(type: Copy, dependsOn: "test") {
+    def sourceDir = layout.buildDirectory.dir("intermediates/apk/free/debug/app-free-debug.apk")
+    def desDir = "$rootDir/apk"
+    from sourceDir
+    into desDir
+    rename "app-free-debug.apk", "gradle-experiment.apk"
+    doLast {
+        def file = new File(desDir, "gradle-experiment.apk")
+        ant.checksum file: file.path
+    }
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == "assembleDebug") {
+        task.finalizedBy "copyApk"
+    }
+}
